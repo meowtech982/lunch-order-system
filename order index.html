@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>306便當點餐系統</title>
+    <style>
+        body {
+            font-family: Arial, "Microsoft JhengHei", sans-serif;
+            max-width: 850px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #f9f9f9;
+        }
+        .room-bar {
+            background: #0288d1;
+            color: white;
+            padding: 12px 18px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .room-info {
+            font-size: 16px;
+            font-weight: bold;
+        }
+        .room-actions button {
+            background-color: #ffffff;
+            color: #0288d1;
+            border: none;
+            padding: 6px 12px;
+            font-size: 13px;
+            font-weight: bold;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .room-actions button:hover {
+            background-color: #e1f5fe;
+        }
+        .header-title {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #ddd;
+            padding-bottom: 5px;
+            margin-top: 25px;
+        }
+        h2 {
+            color: #333;
+            margin: 0;
+        }
+        .menu-board {
+            background: #fff;
+            border: 1px dashed #ccc;
+            padding: 15px;
+            margin-top: 10px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+        }
+        .menu-board textarea {
+            width: 100%;
+            height: 140px;
+            padding: 8px;
+            box-sizing: border-box;
+            font-size: 14px;
+            resize: vertical;
+        }
+        .order-form-container {
+            background: #fff;
+            padding: 15px;
+            margin-top: 10px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        .form-row {
+            margin-bottom: 10px;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        select, input[type="text"], input[type="number"] {
+            padding: 8px;
+            font-size: 15px;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 9px 18px;
+            font-size: 15px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .btn-danger {
+            background-color: #e74c3c;
+            padding: 5px 10px;
+            font-size: 13px;
+            border: none;
+            color: white;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .btn-danger:hover {
+            background-color: #c0392b;
+        }
+        .btn-warning {
+            background-color: #f39c12;
+            padding: 6px 12px;
+            font-size: 13px;
+        }
+        .btn-warning:hover {
+            background-color: #d68910;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: #fff;
+            margin-top: 10px;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        th, td {
+            border: 1px solid #eee;
+            padding: 10px;
+            text-align: center;
+        }
+        th {
+            background-color: #f1f1f1;
+        }
+        .summary {
+            background: #e8f4fd;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            font-size: 15px;
+            color: #0056b3;
+            line-height: 1.6;
+        }
+        .summary-day-box {
+            margin-top: 10px;
+            padding: 10px;
+            background-color: #ffffff;
+            border-left: 4px solid #0288d1;
+            border-radius: 4px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+        .summary-day-title {
+            display: flex;
+            justify-content: space-between;
+            font-weight: bold;
+            color: #333;
+            border-bottom: 1px solid #f0f0f0;
+            padding-bottom: 4px;
+            margin-bottom: 6px;
+        }
+        .summary-day-amount {
+            color: #d9534f;
+            font-size: 16px;
+        }
+        .day-badge {
+            display: inline-block;
+            padding: 2px 6px;
+            background-color: #e1f5fe;
+            color: #0288d1;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+        .day-payment-group {
+            background: #fff;
+            padding: 15px;
+            margin-top: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            border-top: 3px solid #0288d1;
+        }
+        .day-payment-header {
+            font-weight: bold;
+            font-size: 16px;
+            color: #333;
+            margin-bottom: 10px;
+        }
+        .status-ok { color: #27ae60; font-weight: bold; }
+        .status-lack { color: #e74c3c; font-weight: bold; }
+        .status-change { color: #2980b9; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+    <div class="room-bar">
+        <div class="room-info" id="roomDisplay">團購房間：正在連線...</div>
+        <div class="room-actions">
+            <button id="copyUrlBtn" type="button">複製邀請點餐網址</button>
+        </div>
+    </div>
+
+    <div class="header-title" style="margin-top:0;">
+        <h2>1. 菜單管理與設定</h2>
+        <button id="saveMenuBtn" type="button" class="btn-warning">更新並同步菜單</button>
+    </div>
+    <div class="menu-board">
+        <p style="margin-top:0; font-size: 13px; color: #666;">
+            格式說明：每行最右側附上「價格數字」即可，編輯後請點擊上方「更新並同步菜單」：
+        </p>
+        <textarea id="menuInput">小菲手卷 - 60
+正園A餐-65
+正園B餐-65
+正園羊肉-65
+太師傅(1) - 100
+太師傅(2) - 85
+太師傅(3) - 75
+米寶方便素-85
+米寶1號-85
+米寶3號-95
+吉樂米1號-65
+吉樂米2號-75
+吉樂米3號-100</textarea>
+    </div>
+
+    <h2>2. 新增訂單</h2>
+    <div class="order-form-container">
+        <div class="form-row">
+            <label for="orderDay">訂購星期：</label>
+            <select id="orderDay">
+                <option value="1">星期一</option>
+                <option value="2">星期二</option>
+                <option value="3">星期三</option>
+                <option value="4">星期四</option>
+                <option value="5">星期五</option>
+            </select>
+
+            <label for="orderName">訂購人：</label>
+            <input type="text" id="orderName" placeholder="例如：逼逼拉布" style="width: 110px;">
+            
+            <label for="mealSelect">選擇餐點：</label>
+            <select id="mealSelect">
+                <!-- 動態帶入選項 -->
+            </select>
+            
+            <label for="mealQty">數量：</label>
+            <input type="number" id="mealQty" value="1" min="1" style="width: 50px;">
+            
+            <button id="addOrderBtn" type="button">加入訂單</button>
+        </div>
+    </div>
+
+    <div class="header-title">
+        <h2>3. 訂單列表與即時統計</h2>
+        <button id="resetOrdersBtn" class="btn-warning" type="button">清空本房訂單</button>
+    </div>
+    
+    <table id="orderTable">
+        <thead>
+            <tr>
+                <th>星期</th>
+                <th>訂購人</th>
+                <th>餐點名稱</th>
+                <th>單價</th>
+                <th>數量</th>
+                <th>小計</th>
+                <th>操作</th>
+            </tr>
+        </thead>
+        <tbody id="orderListBody">
+            <tr><td colspan="7" style="color: #888;">正在載入即時訂單...</td></tr>
+        </tbody>
+    </table>
+
+    <div class="summary" id="summaryBox">
+        <strong>每日金額結算與品項統計：</strong> 載入中...
+    </div>
+
+    <div class="header-title">
+        <h2>4. 每日個人結算與找零對帳</h2>
+    </div>
+    <div id="paymentSectionsContainer">
+        <div style="background:#fff; padding:15px; margin-top:10px; border-radius:8px; text-align:center; color:#888;">
+            目前尚無訂單資料
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getDatabase, ref, onValue, set, remove } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+        // ========================================================
+        // 1. 請在此填入您的 Firebase 專案設定 (Firebase Config)
+        // ========================================================
+        const firebaseConfig = {
+            apiKey: "AIzaSyCZh_efbEoonsLmMEIHWy8SGJbbcRxiKbM",
+            authDomain: "my-lunch-system.firebaseapp.com",
+            databaseURL: "https://my-lunch-system-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "my-lunch-system",
+            storageBucket: "my-lunch-system.firebasestorage.app",
+            messagingSenderId: "433685852781",
+            appId: "1:433685852781:web:483728b247d0ee771e0564"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        // ========================================================
+        // 2. 房間號碼邏輯 (?room=xxx)
+        // ========================================================
+        const urlParams = new URLSearchParams(window.location.search);
+        let roomId = urlParams.get('room');
+
+        if (!roomId) {
+            roomId = "lunch_" + Math.random().toString(36).substring(2, 8);
+            urlParams.set('room', roomId);
+            window.history.replaceState({}, '', `${window.location.pathname}?${urlParams.toString()}`);
+        }
+
+        document.getElementById('roomDisplay').innerText = `團購房間號碼：${roomId}`;
+
+        const ADMIN_PASSWORD = "admin123";
+        const DAY_MAP = { "1": "星期一", "2": "星期二", "3": "星期三", "4": "星期四", "5": "星期五" };
+
+        let menuItems = [];
+        let orders = [];
+        let paidMap = {};
+
+        // 資料庫路徑
+        const roomRef = ref(db, `rooms/${roomId}`);
+        const menuTextRef = ref(db, `rooms/${roomId}/menuText`);
+        const ordersRef = ref(db, `rooms/${roomId}/orders`);
+        const paidRef = ref(db, `rooms/${roomId}/paidMap`);
+
+        // 初始化與事件綁定
+        window.addEventListener('DOMContentLoaded', () => {
+            bindEvents();
+            listenFirebaseData();
+        });
+
+        function bindEvents() {
+            document.getElementById('copyUrlBtn').addEventListener('click', () => {
+                navigator.clipboard.writeText(window.location.href);
+                alert('已複製邀請連結！直接傳給同事即可一起線上點餐。');
+            });
+
+            document.getElementById('saveMenuBtn').addEventListener('click', () => {
+                const text = document.getElementById('menuInput').value;
+                set(menuTextRef, text);
+            });
+
+            document.getElementById('addOrderBtn').addEventListener('click', addOrder);
+            document.getElementById('resetOrdersBtn').addEventListener('click', resetAllOrders);
+
+            document.getElementById('orderListBody').addEventListener('click', (e) => {
+                if (e.target && e.target.classList.contains('btn-remove-order')) {
+                    const orderId = e.target.getAttribute('data-id');
+                    if (orderId) removeSingleOrder(orderId);
+                }
+            });
+
+            document.getElementById('paymentSectionsContainer').addEventListener('change', (e) => {
+                if (e.target && e.target.classList.contains('paid-input')) {
+                    const dayCode = e.target.getAttribute('data-day');
+                    const personName = e.target.getAttribute('data-person');
+                    handlePaidInputChange(e.target.value, dayCode, personName);
+                }
+            });
+        }
+
+        // 即時監聽 Firebase 資料庫變動
+        function listenFirebaseData() {
+            onValue(roomRef, (snapshot) => {
+                const data = snapshot.val() || {};
+
+                // 處理菜單
+                if (data.menuText !== undefined) {
+                    document.getElementById('menuInput').value = data.menuText;
+                } else {
+                    const defaultMenu = document.getElementById('menuInput').value;
+                    set(menuTextRef, defaultMenu);
+                }
+                parseMenuText(document.getElementById('menuInput').value);
+
+                // 處理訂單 (物件轉陣列)
+                if (data.orders) {
+                    orders = Object.keys(data.orders).map(key => ({
+                        id: key,
+                        ...data.orders[key]
+                    }));
+                } else {
+                    orders = [];
+                }
+
+                // 處理已付款狀態
+                paidMap = data.paidMap || {};
+
+                renderOrders();
+            });
+        }
+
+        function parseMenuText(text) {
+            const lines = text.split('\n');
+            menuItems = [];
+            let index = 1;
+
+            lines.forEach(line => {
+                const trimmed = line.trim();
+                if (!trimmed) return;
+                const match = trimmed.match(/^(.*?)[-–—:$\s]+\s*(\d+)$/) || trimmed.match(/^(.*?)\s*(\d+)$/);
+                if (match) {
+                    const name = match[1].trim();
+                    const price = parseInt(match[2], 10);
+                    if (name && !isNaN(price)) {
+                        menuItems.push({ id: String(index++), name: name, price: price });
+                    }
+                }
+            });
+
+            const select = document.getElementById('mealSelect');
+            select.innerHTML = '<option value="">-- 請選擇餐點 --</option>';
+            menuItems.forEach((item) => {
+                const opt = document.createElement('option');
+                opt.value = item.id;
+                opt.textContent = `${item.name} ($${item.price})`;
+                select.appendChild(opt);
+            });
+        }
+
+        function addOrder() {
+            const dayVal = document.getElementById('orderDay').value;
+            const name = document.getElementById('orderName').value.trim();
+            const mealId = document.getElementById('mealSelect').value;
+            const qty = parseInt(document.getElementById('mealQty').value, 10);
+
+            if (!name) return alert('請輸入訂購人姓名！');
+            if (!mealId) return alert('請選擇餐點！');
+            if (isNaN(qty) || qty < 1) return alert('請輸入有效的數量！');
+
+            const selectedMeal = menuItems.find(item => item.id === mealId);
+            if (!selectedMeal) return alert('所選餐點不存在！');
+
+            const newOrderKey = Date.now() + "_" + Math.random().toString(36).substring(2, 6);
+            const newOrderRef = ref(db, `rooms/${roomId}/orders/${newOrderKey}`);
+
+            set(newOrderRef, {
+                day: dayVal,
+                name: name,
+                mealName: selectedMeal.name,
+                price: selectedMeal.price,
+                qty: qty
+            });
+
+            document.getElementById('orderName').value = '';
+            document.getElementById('mealQty').value = '1';
+        }
+
+        function removeSingleOrder(orderId) {
+            const singleOrderRef = ref(db, `rooms/${roomId}/orders/${orderId}`);
+            remove(singleOrderRef);
+        }
+
+        function resetAllOrders() {
+            const inputPassword = prompt('請輸入管理者密碼以清空本房訂單：');
+            if (inputPassword === null) return;
+            if (inputPassword !== ADMIN_PASSWORD) {
+                alert('密碼錯誤！無法執行清空動作。');
+                return;
+            }
+
+            if (confirm('確定要清空本房間所有訂單與找零記錄嗎？')) {
+                remove(ordersRef);
+                remove(paidRef);
+                alert('本房訂單已完全清空！');
+            }
+        }
+
+        function handlePaidInputChange(valStr, dayCode, personName) {
+            const key = `${dayCode}_${personName}`;
+            const targetPaidRef = ref(db, `rooms/${roomId}/paidMap/${key}`);
+
+            if (valStr === '') {
+                remove(targetPaidRef);
+            } else {
+                set(targetPaidRef, parseInt(valStr, 10));
+            }
+        }
+
+        function renderOrders() {
+            const tbody = document.getElementById('orderListBody');
+            const summaryBox = document.getElementById('summaryBox');
+            tbody.innerHTML = '';
+
+            if (orders.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" style="color: #888;">目前尚無訂單，傳送連結讓大家加入吧！</td></tr>';
+                summaryBox.innerHTML = '<strong>每日金額結算與品項統計：</strong> 尚無訂單資料';
+                renderPaymentList();
+                return;
+            }
+
+            const sortedOrders = [...orders].sort((a, b) => parseInt(a.day || "1", 10) - parseInt(b.day || "1", 10));
+
+            let grandTotal = 0;
+            const dayTotals = { "1": 0, "2": 0, "3": 0, "4": 0, "5": 0 };
+            const dayStats = { "1": {}, "2": {}, "3": {}, "4": {}, "5": {} };
+
+            sortedOrders.forEach((order) => {
+                const subtotal = order.price * order.qty;
+                grandTotal += subtotal;
+
+                const dayKey = order.day || "1";
+                const mealKey = order.mealName;
+                
+                dayTotals[dayKey] = (dayTotals[dayKey] || 0) + subtotal;
+                if (!dayStats[dayKey]) dayStats[dayKey] = {};
+                dayStats[dayKey][mealKey] = (dayStats[dayKey][mealKey] || 0) + order.qty;
+
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td><span class="day-badge">${DAY_MAP[order.day] || '星期一'}</span></td>
+                    <td>${escapeHtml(order.name)}</td>
+                    <td>${escapeHtml(order.mealName)}</td>
+                    <td>$${order.price}</td>
+                    <td>${order.qty}</td>
+                    <td>$${subtotal}</td>
+                    <td><button type="button" class="btn-danger btn-remove-order" data-id="${order.id}">刪除</button></td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            let statsHtml = '';
+            ["1", "2", "3", "4", "5"].forEach(dayCode => {
+                const dayObj = dayStats[dayCode] || {};
+                const activeMealNames = Object.keys(dayObj);
+                
+                if (activeMealNames.length > 0) {
+                    const mealListStr = activeMealNames
+                        .map(mName => `${escapeHtml(mName)}: ${dayObj[mName]} 份`)
+                        .join('、');
+
+                    statsHtml += `
+                        <div class="summary-day-box">
+                            <div class="summary-day-title">
+                                <span>${DAY_MAP[dayCode]}</span>
+                                <span class="summary-day-amount">小計：$${dayTotals[dayCode]}</span>
+                            </div>
+                            <div style="font-size: 14px; color: #555;">
+                                <strong>點餐明細：</strong>${mealListStr}
+                            </div>
+                        </div>
+                    `;
+                }
+            });
+
+            summaryBox.innerHTML = `
+                <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px dashed #0288d1; padding-bottom: 8px;">
+                    <strong>每日金額與統計結算：</strong>
+                    <span>本週累積總金額：<strong style="color: #d9534f; font-size: 18px;">$${grandTotal}</strong></span>
+                </div>
+                ${statsHtml}
+            `;
+
+            renderPaymentList();
+        }
+
+        function renderPaymentList() {
+            const container = document.getElementById('paymentSectionsContainer');
+            container.innerHTML = '';
+
+            if (orders.length === 0) {
+                container.innerHTML = `<div style="background:#fff; padding:15px; margin-top:10px; border-radius:8px; text-align:center; color:#888;">目前尚無訂單資料</div>`;
+                return;
+            }
+
+            const dayPersonMap = { "1": {}, "2": {}, "3": {}, "4": {}, "5": {} };
+            orders.forEach(o => {
+                const dayKey = o.day || "1";
+                const person = o.name;
+                const total = o.price * o.qty;
+                if (!dayPersonMap[dayKey]) dayPersonMap[dayKey] = {};
+                dayPersonMap[dayKey][person] = (dayPersonMap[dayKey][person] || 0) + total;
+            });
+
+            ["1", "2", "3", "4", "5"].forEach(dayCode => {
+                const personsObj = dayPersonMap[dayCode] || {};
+                const personNames = Object.keys(personsObj);
+
+                if (personNames.length > 0) {
+                    let rowsHtml = '';
+                    personNames.forEach(personName => {
+                        const totalDue = personsObj[personName];
+                        const key = `${dayCode}_${personName}`;
+                        const paidVal = paidMap[key] !== undefined ? paidMap[key] : '';
+
+                        let statusHtml = '<span style="color: #999;">尚未付款</span>';
+                        if (paidVal !== '') {
+                            const diff = paidVal - totalDue;
+                            if (diff === 0) statusHtml = '<span class="status-ok">✔ 已付清</span>';
+                            else if (diff > 0) statusHtml = `<span class="status-change">找零 $${diff}</span>`;
+                            else statusHtml = `<span class="status-lack">少 $${Math.abs(diff)}</span>`;
+                        }
+
+                        rowsHtml += `
+                            <tr>
+                                <td><strong>${escapeHtml(personName)}</strong></td>
+                                <td>$${totalDue}</td>
+                                <td>
+                                    $ <input type="number" value="${paidVal}" placeholder="輸入實收金額" class="paid-input" data-day="${dayCode}" data-person="${escapeHtml(personName)}" style="width: 110px; padding: 4px; font-size: 14px;">
+                                </td>
+                                <td>${statusHtml}</td>
+                            </tr>
+                        `;
+                    });
+
+                    const dayGroup = document.createElement('div');
+                    dayGroup.className = 'day-payment-group';
+                    dayGroup.innerHTML = `
+                        <div class="day-payment-header">📌 ${DAY_MAP[dayCode]} 對帳單</div>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>訂購人</th>
+                                    <th>當日應付</th>
+                                    <th>實收金額</th>
+                                    <th>找零 / 狀態</th>
+                                </tr>
+                            </thead>
+                            <tbody>${rowsHtml}</tbody>
+                        </table>
+                    `;
+                    container.appendChild(dayGroup);
+                }
+            });
+        }
+
+        function escapeHtml(str) {
+            if (typeof str !== 'string') return str;
+            return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+        }
+    </script>
+</body>
+</html>
