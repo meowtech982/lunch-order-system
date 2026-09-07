@@ -238,7 +238,7 @@
             </select>
 
             <label for="orderName">訂購人：</label>
-            <input type="text" id="orderName" placeholder="例如：逼逼拉布" style="width: 110px;">
+            <input type="text" id="orderName" placeholder="例如：王小明" style="width: 110px;">
             
             <label for="mealSelect">選擇餐點：</label>
             <select id="mealSelect">
@@ -346,9 +346,18 @@
                 alert('已複製邀請連結！直接傳給同事即可一起線上點餐。');
             });
 
+            // 更新菜單改為需驗證密碼
             document.getElementById('saveMenuBtn').addEventListener('click', () => {
+                const inputPassword = prompt('請輸入管理者密碼以更新菜單：');
+                if (inputPassword === null) return;
+                if (inputPassword !== ADMIN_PASSWORD) {
+                    alert('密碼錯誤！無法更新菜單。');
+                    return;
+                }
+
                 const text = document.getElementById('menuInput').value;
                 set(menuTextRef, text);
+                alert('菜單已成功更新並同步給所有人！');
             });
 
             document.getElementById('addOrderBtn').addEventListener('click', addOrder);
